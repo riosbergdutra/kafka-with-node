@@ -1,23 +1,29 @@
-const { Kafka, Partitioners } = require('kafkajs')
+// producer.js
+const { Kafka, Partitioners } = require('kafkajs');
 
 const kafka = new Kafka({
-  clientId: 'my-app',
-  brokers: ['localhost:9092'],
-})
+  clientId: 'my-app', 
+  brokers: ['localhost:9092'], 
+});
 
-const producer = kafka.producer({ createPartitioner: Partitioners.LegacyPartitioner })
+const producer = kafka.producer({
+  createPartitioner: Partitioners.LegacyPartitioner, 
+});
 
-const runProducer = async () => {
-  await producer.connect()
+module.exports = {
+  producer,
+  runProducer: async (topic, message) => {
+    try {
+      await producer.connect();
 
-  await producer.send({
-    topic: 'test-topic',
-    messages: [
-      { value: 'Hello world!' },
-    ],
-  })
+      await producer.send({
+        topic,
+        messages: [{ value: JSON.stringify(message) }],
+      });
 
-  await producer.disconnect()
-}
-
-module.exports = { runProducer, producer }
+      console.log(`Mensagem enviada para o tópico ${topic}`);
+    } finally {
+      await producer.disconnect();
+    }
+  },
+};
